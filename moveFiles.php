@@ -85,7 +85,7 @@ try {
         switch (strtolower($prefix)) {
             case 'stock':
                 $srcDest = "{$paths['src']['stock']}{$folder}source_stock.csv";
-                $lastVersionDest = "{$paths['last_version']['stock']}source_stock_{$subPrefix}.csv";
+                $lastVersionDest = "{$paths['last_version']['stock']}{$folder}source_stock_{$subPrefix}.csv";
                 handleFileCopy($filePath, $paths['backup']['stock'], $file, $srcDest, $lastVersionDest);
                 $counts['stock']++;
                 $hasCopied = true;
@@ -93,7 +93,7 @@ try {
 
             case 'ref':
                 $srcDest = "{$paths['src']['ref']}{$folder}source_ref.csv";
-                $lastVersionDest = "{$paths['last_version']['ref']}source_ref_{$subPrefix}.csv";
+                $lastVersionDest = "{$paths['last_version']['ref']}{$folder}source_ref.csv";
                 $diffOutput = "{$paths['src']['ref']}{$folder}updated.csv"; // Fichier de sortie du script Python
                 $diffLog = "{$paths['src']['ref']}{$folder}diff_log.csv";  // Log des différences
                 $deletedFile = "{$paths['src']['ref']}{$folder}deleted_rows.csv"; // Fichier des suppressions
@@ -108,7 +108,7 @@ try {
                     // Commande pour exécuter le script Python
                     $pythonScript = '/home/drive/ftp/geant-drive-script/ref_diff.py'; // Remplacez par le chemin réel de votre script Python
                     $command = "python3 " . escapeshellarg($pythonScript) . " " .
-                        escapeshellarg($srcDest) . " " . // Ancien fichier
+                        escapeshellarg($lastVersionDest) . " " . // Ancien fichier
                         escapeshellarg($filePath) . " " . // Nouveau fichier
                         "--output-data " . escapeshellarg($diffOutput);
 
@@ -150,7 +150,7 @@ try {
 
             case 'price':
                 $srcDest = "{$paths['src']['price']}{$folder}source_price.csv";
-                $lastVersionDest = "{$paths['last_version']['price']}source_price_{$subPrefix}.csv";
+                $lastVersionDest = "{$paths['last_version']['price']}{$folder}source_price_{$subPrefix}.csv";
                 handlePriceFileCopy($filePath, $paths['backup']['price'], $file, $srcDest, $lastVersionDest, $folder);
                 $counts['price']++;
                 $hasCopied = true;
