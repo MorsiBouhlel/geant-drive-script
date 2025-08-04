@@ -53,8 +53,12 @@ function processCategories(string $categoryString): array {
  */
 function imageFindByRef(string $needle, array $imageFiles, string $prefix): array {
     return array_map(
-        fn($file) => $prefix . $file,
-        array_filter($imageFiles, fn($file) => str_starts_with($file, $needle))
+        function($file) use ($prefix) {
+            return $prefix . $file;
+        },
+        array_filter($imageFiles, function($file) use ($needle) {
+            return strpos($file, $needle) === 0;
+        })
     );
 }
 
