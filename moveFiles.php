@@ -1,93 +1,182 @@
 <?php
 
-$dirpath = '/home/ubuntu_user/geant.local/ECHANGES/STOCK';
-$originPath = '/home/drive/ftp';
-$backupStockPath = '/home/drive/ftp/backup/stock/';
-$srcStockPath = '/home/drive/ftp/src/stock/';
-$backupRefPath = '/home/drive/ftp/backup/ref/';
-$srcRefPath = '/home/drive/ftp/src/ref/';
-$backupPricePath = '/home/drive/ftp/backup/price/';
-$srcPricePath = '/home/drive/ftp/src/price/';
-$dirPathSrcProduct = '/home/drive/ftp/src/product';
-if(!is_dir($dirPathSrcProduct)){
-    mkdir($dirPathSrcProduct, 0755, true);
+// Configuration des chemins
+$paths = [
+    'origin' => '/home/drive/ftp',
+    'backup' => [
+        'stock' => '/home/drive/ftp/backup/stock/',
+        'ref' => '/home/drive/ftp/backup/ref/',
+        'price' => '/home/drive/ftp/backup/price/'
+    ],
+    'src' => [
+        'stock' => '/home/drive/ftp/src/stock/',
+        'ref' => '/home/drive/ftp/src/ref/',
+        'price' => '/home/drive/ftp/src/price/',
+        'product' => '/home/drive/ftp/src/product'
+    ],
+    'last_version' => [
+        'stock' => '/home/drive/ftp/last_version/stock/',
+        'ref' => '/home/drive/ftp/last_version/ref/',
+        'price' => '/home/drive/ftp/last_version/price/'
+    ]
+];
+
+// Création des dossiers si nécessaire
+$dirs_to_create = [
+    $paths['src']['product'],
+    $paths['last_version']['stock'],
+    $paths['last_version']['ref'],
+    $paths['last_version']['price']
+];
+
+foreach ($dirs_to_create as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
 }
 
-if($dossier = opendir($originPath))
-{
-    $nbStock = 0;
-    $nbRef = 0;
-    $nbPrice = 0;
-    $bCopy = false;
+// Map des préfixes aux dossiers
+$prefixMap = [
+    '2000' => '2000/',
+    '2001' => '2001/',
+    '2002' => '2002/',
+    '2003' => '2003/'
+];
 
-    while(false !== ($fichier = readdir($dossier)))
-    {
-        $fileExploade = explode(".", $fichier);
-        $prefix = explode("_", $fileExploade[0]);
+try {
+    $dir = opendir($paths['origin']);
+    if (!$dir) {
+        throw new Exception("Impossible d'ouvrir le dossier {$paths['origin']}");
+    }
 
-        $f = "";
-        if (strpos($prefix[1], '2000') === 0){
-            $f = "2000/";
+    $counts = [
+        'stock' => 0,
+        'ref' => 0,
+        'price' => 0
+    ];
+    $hasCopied = false;
+
+    while (($file = readdir($dir)) !== false) {
+        // Ignorer . et ..
+        if ($file === '.' || $file === '..') {
+            continue;
         }
 
-        if (strpos($prefix[1], '2002') === 0){
-            $f = "2002/";
+        $fileParts = explode('.', $file);
+        if (count($fileParts) < 2 || !isset($fileParts[1])) {
+            continue;
         }
 
-        if (strpos($prefix[1], '2001') === 0){
-            $f = "2001/";
+        $prefixParts = explode('_', $fileParts[0]);
+        if (count($prefixParts) < 2 || !isset($prefixParts[0], $prefixParts[1])) {
+            continue;
         }
 
-        if (strpos($prefix[1], '2003') === 0){
-            $f = "2003/";
+        $prefix = $prefixParts[0];
+        $subPrefix = substr($prefixParts[1], 0, 4);
+        $folder = $prefixMap[$subPrefix] ?? null;
+
+        if (!$folder) {
+            continue;
         }
 
-        if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'Stock'){
+        $filePath = "{$paths['origin']}/{$file}";
 
-            copy($originPath.'/'.$fichier,$backupStockPath.$fichier);
-            copy($originPath.'/'.$fichier,$srcStockPath.$f.'source_stock.csv');
-            unlink($originPath.'/'.$fichier);
-            $nbStock++;
-            $bCopy = true;
-            //echo "Copy Ok\n";
-        }else {
-            //echo "Pas de fichiers stock\n";
-        }
+        switch (strtolower($prefix)) {
+            case 'stock':
+                $srcDest = "{$paths['src']['stock']}{$folder}source_stock.csv";
+                $lastVersionDest = "{$paths['last_version']['stock']}source_stock_{$subPrefix}.csv";
+                handleFileCopy($filePath, $paths['backup']['stock'], $file, $srcDest, $lastVersionDest);
+                $counts['stock']++;
+                $hasCopied = true;
+                break;
 
-        if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'Ref'){
-            copy($originPath.'/'.$fichier,$backupRefPath.$fichier);
-            copy($originPath.'/'.$fichier,$srcRefPath.$f.'source_ref.csv');
-            unlink($originPath.'/'.$fichier);
-            $nbRef++;
-            $bCopy = true;
-        }
+            case 'ref':
+                $srcDest = "{$paths['src']['ref']}{$folder}source_ref.csv";
+                $lastVersionDest = "{$paths['last_version']['ref']}source_ref_{$subPrefix}.csv";
+                handleFileCopy($filePath, $paths['backup']['stock'], $file, $srcDest, $lastVersionDest);
+                $counts['ref']++;
+                $hasCopied = true;
+                break;
 
-	if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'price'){
-            copy($originPath.'/'.$fichier,$backupPricePath.$fichier);
-
-            if (file_exists($srcPricePath.$f.'source_price.csv')) {
-                $file_tmp = file_get_contents($originPath.'/'.$fichier);
-                $file_src = fopen($srcPricePath.$f.'source_price.csv','a+');
-                fwrite($file_src, $file_tmp);
-            } else {
-                copy($originPath.'/'.$fichier,$srcPricePath.$f.'source_price.csv');
-            }
-
-            unlink($originPath.'/'.$fichier);
-            $nbPrice++;
-            $bCopy = true;
+            case 'price':
+                $srcDest = "{$paths['src']['price']}{$folder}source_price.csv";
+                $lastVersionDest = "{$paths['last_version']['price']}source_price_{$subPrefix}.csv";
+                handlePriceFileCopy($filePath, $paths['backup']['price'], $file, $srcDest, $lastVersionDest, $folder);
+                $counts['price']++;
+                $hasCopied = true;
+                break;
         }
     }
 
-    if ($bCopy){
-        echo "Copie terminée : \n";
-        echo "Stock => ".$nbStock."\n";
-        echo "Ref => ".$nbRef."\n";
-        echo "Price => ".$nbPrice."\n";
-    }else{
-        echo "Aucun nouveau fichier.\n";
+    closedir($dir);
+
+    // Affichage des résultats
+    echo $hasCopied
+        ? "Copie terminée :\n" .
+        "Stock => {$counts['stock']}\n" .
+        "Ref => {$counts['ref']}\n" .
+        "Price => {$counts['price']}\n"
+        : "Aucun nouveau fichier.\n";
+
+} catch (Exception $e) {
+    echo "Erreur : {$e->getMessage()}\n";
+}
+
+/**
+ * Gère la copie d'un fichier avec sauvegarde de la dernière version
+ */
+function handleFileCopy(string $source, string $backupPath, string $fileName, string $srcDest, string $lastVersionDest): void {
+    // Sauvegarde de la version précédente si elle existe
+    if (file_exists($srcDest)) {
+        if (!copy($srcDest, $lastVersionDest)) {
+            throw new Exception("Échec de la sauvegarde de la dernière version vers $lastVersionDest");
+        }
     }
 
+    // Copie vers backup et source
+    if (!copy($source, "{$backupPath}{$fileName}") || !copy($source, $srcDest)) {
+        throw new Exception("Échec de la copie du fichier $source");
+    }
+
+    // Suppression du fichier original
+    if (!unlink($source)) {
+        throw new Exception("Échec de la suppression du fichier $source");
+    }
+}
+
+/**
+ * Gère la copie des fichiers price avec concatenation et sauvegarde de la dernière version
+ */
+function handlePriceFileCopy(string $source, string $backupPath, string $fileName, string $srcDest, string $lastVersionDest, string $folder): void {
+    // Sauvegarde de la version précédente si elle existe
+    if (file_exists($srcDest)) {
+        if (!copy($srcDest, $lastVersionDest)) {
+            throw new Exception("Échec de la sauvegarde de la dernière version vers $lastVersionDest");
+        }
+    }
+
+    // Copie vers backup
+    if (!copy($source, "{$backupPath}{$fileName}")) {
+        throw new Exception("Échec de la copie vers {$backupPath}{$fileName}");
+    }
+
+    // Gestion de la copie vers source (avec concatenation si nécessaire)
+    if (file_exists($srcDest)) {
+        $content = file_get_contents($source);
+        if ($content === false || !file_put_contents($srcDest, $content, FILE_APPEND)) {
+            throw new Exception("Échec de l'écriture dans $srcDest");
+        }
+    } else {
+        if (!copy($source, $srcDest)) {
+            throw new Exception("Échec de la copie vers $srcDest");
+        }
+    }
+
+    // Suppression du fichier original
+    if (!unlink($source)) {
+        throw new Exception("Échec de la suppression du fichier $source");
+    }
 }
 
 ?>
