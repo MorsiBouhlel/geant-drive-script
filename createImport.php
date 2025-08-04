@@ -116,7 +116,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
     // Read source data
     try {
         $sourceContent = csvToArray($sourceFile);
-        echo "Source file: nano $sourceFile\n";
+        echo "Source file: $sourceFile\n";
         echo "Number of references: " . count($sourceContent) . "\n";
     } catch (RuntimeException $e) {
         echo "Error: {$e->getMessage()}\n";
