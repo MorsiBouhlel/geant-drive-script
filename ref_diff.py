@@ -39,8 +39,6 @@ def extract_diff_threaded_with_log(
     old_file,
     new_file,
     output_data_file,
-    output_log_file,
-    deleted_file,
     id_column='EAN',
     delimiter=';',
     max_workers=8
@@ -83,10 +81,7 @@ def extract_diff_threaded_with_log(
                             'new_value': new_val
                         })
 
-    # Suppressions
-    for ean in old_data:
-        if ean not in new_data:
-            deleted_rows.append(old_data[ean])
+
 
     # 📁 Écriture des mises à jour
     with open(output_data_file, mode='w', encoding='utf-8', newline='') as out:
@@ -95,27 +90,12 @@ def extract_diff_threaded_with_log(
         cleaned = [{k: v for k, v in row.items() if k in fieldnames} for row in results]
         writer.writerows(cleaned)
 
-    # 📁 Log des modifs
-    with open(output_log_file, mode='w', encoding='utf-8', newline='') as log_file:
-        log_writer = csv.DictWriter(log_file, fieldnames=['EAN', 'action', 'field', 'old_value', 'new_value'])
-        log_writer.writeheader()
-        log_writer.writerows(logs)
-
-    # 📁 Suppressions dans deleted_rows.csv
-    with open(deleted_file, mode='w', encoding='utf-8', newline='') as del_file:
-        writer = csv.DictWriter(del_file, fieldnames=fieldnames, delimiter=delimiter)
-        writer.writeheader()
-        cleaned_del = [{k: v for k, v in row.items() if k in fieldnames} for row in deleted_rows]
-        writer.writerows(cleaned_del)
-
 def main():
     # Configuration des arguments en ligne de commande
     parser = argparse.ArgumentParser(description="Compare deux fichiers CSV et génère des fichiers de différences.")
     parser.add_argument('old_file', type=str, help="Chemin vers l'ancien fichier CSV")
     parser.add_argument('new_file', type=str, help="Chemin vers le nouveau fichier CSV")
     parser.add_argument('--output-data', type=str, default='updated.csv', help="Chemin vers le fichier de sortie pour les données mises à jour")
-    parser.add_argument('--output-log', type=str, default='diff_log.csv', help="Chemin vers le fichier de log des différences")
-    parser.add_argument('--deleted-file', type=str, default='deleted_rows.csv', help="Chemin vers le fichier des lignes supprimées")
     parser.add_argument('--id-column', type=str, default=' EAN', help="Nom de la colonne ID (par défaut: EAN)")
     parser.add_argument('--delimiter', type=str, default=';', help="Délimiteur CSV (par défaut: ;)")
     parser.add_argument('--max-workers', type=int, default=8, help="Nombre maximum de workers pour le multithreading (par défaut: 8)")
@@ -127,8 +107,6 @@ def main():
         old_file=args.old_file,
         new_file=args.new_file,
         output_data_file=args.output_data,
-        output_log_file=args.output_log,
-        deleted_file=args.deleted_file,
         id_column=args.id_column,
         delimiter=args.delimiter,
         max_workers=args.max_workers
