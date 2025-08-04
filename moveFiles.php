@@ -129,7 +129,7 @@ try {
                     }
 
                     // Remplacer srcDest par le fichier de différences (updated.csv)
-                    if (!copy($diffOutput, $srcDest)) {
+                    if (!rename($diffOutput, $srcDest)) {
                         throw new Exception("Échec de la copie de $diffOutput vers $srcDest");
                     }
                 } else {
