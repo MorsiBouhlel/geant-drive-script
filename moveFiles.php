@@ -85,7 +85,7 @@ try {
         switch (strtolower($prefix)) {
             case 'stock':
                 $srcDest = "{$paths['src']['stock']}{$folder}source_stock.csv";
-                $lastVersionDest = "{$paths['last_version']['stock']}{$folder}source_stock_{$subPrefix}.csv";
+                $lastVersionDest = "{$paths['last_version']['stock']}{$folder}source_stock.csv";
                 handleFileCopy($filePath, $paths['backup']['stock'], $file, $srcDest, $lastVersionDest);
                 $counts['stock']++;
                 $hasCopied = true;
@@ -150,7 +150,7 @@ try {
 
             case 'price':
                 $srcDest = "{$paths['src']['price']}{$folder}source_price.csv";
-                $lastVersionDest = "{$paths['last_version']['price']}{$folder}source_price_{$subPrefix}.csv";
+                $lastVersionDest = "{$paths['last_version']['price']}{$folder}source_price.csv";
                 handlePriceFileCopy($filePath, $paths['backup']['price'], $file, $srcDest, $lastVersionDest, $folder);
                 $counts['price']++;
                 $hasCopied = true;
