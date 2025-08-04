@@ -1,0 +1,156 @@
+<?php
+
+
+    $sourceFolder = "/home/drive/ftp/src/ref";
+    $destFolder = "/home/drive/ftp/dest/product";
+    
+    $imagesFolder = "/home/drive/ftp/IMGS";
+    //$imageUrlPrefix = '/homez.37/dotitcorbv/drivegeant/IMGS/';
+    //$imageUrlPrefix = 'ftp://dotitcorbv-drive:8Unty4TpNg@ftp.cluster020.hosting.ovh.net/IMGS/';
+    $imageUrlPrefix = 'http://10.40.1.35/drive/IMGS/';
+
+    $imagesLogFile = '/home/drive/ftp/logs/'.date('d-m-Y_Hi').'_images.csv';
+    $fImagesCSV = fopen($imagesLogFile,'w');
+
+    $aFiles = scandir($imagesFolder);
+
+    echo "nb images : ".count($aFiles)."\n";
+    
+
+    fputcsv($fImagesCSV, ['ref','categories'], ';');
+    
+
+    $destFileName = $destFolder.DIRECTORY_SEPARATOR.'backup'.DIRECTORY_SEPARATOR.date('d-m-Y_Hi').'_newProducts.csv';
+
+
+
+	$file = $sourceFolder.DIRECTORY_SEPARATOR.'source_ref.csv';
+
+
+				$fp = fopen($destFileName, 'w');
+				$header = ['name', 'active', 'categories', 'pv', 'reference', 'fournisseur', 'marque', 'ean', 'saveur', 'libcom2', 'contenance', 'description', 'images','coeficient', 'default_cat'];
+
+
+
+    fputcsv($fp, $header, ';');
+
+    $aSourceContent = csv_to_array2($file, ';');
+    echo "nb refs : ".count($aSourceContent)."\n";
+    foreach ($aSourceContent as $line){
+
+        $aImages = imageFindByRef($line[3], $aFiles, $imageUrlPrefix);
+        //var_dump($line[3]);
+        //var_dump($aImages);
+                if (!count($aImages)) {
+
+                    fputcsv($fImagesCSV, [$line[3],$line[1]], ';');
+                    //$ref_temp = $line[8];
+                    //echo "pas d'image pour ".$line[3]."\n";
+                    continue;
+                }
+        $aDoubleCategories = explode('/',$line[1]);
+        //$aCategories = str_split(str_pad($line[1], 9, "0"), 3);
+        $aCategories = [];
+        $i = 0;
+        foreach ($aDoubleCategories as $doubleCategory){
+            if (!empty($doubleCategory)){
+                $i++;
+                $aCategories = array_merge($aCategories,str_split(str_pad($doubleCategory, 9, "0"), 3));
+            }
+        }
+
+        if ($i > 1){
+            var_dump($line[3]);
+        }
+
+        foreach ($aCategories as $key => $value) {
+            $aCategories[$key] = (int) $value;
+        }
+
+        fputcsv($fp, [$line[0], 1,implode(',', $aCategories), floatval(str_replace(',', '.', $line[2])), $line[3], $line[4], $line[5], strval($line[6]), $line[7], $line[8], $line[8],$line[8].' '.$line[7],implode(',', $aImages),$line[10], $aCategories[2]], ";");
+
+        $aCategories = [];
+    }
+
+
+				//fclose($fp);
+                //fclose($fImagesCSV);
+                copy($destFileName, $destFolder.DIRECTORY_SEPARATOR.'newProducts.csv');
+                echo "Terminé\n";
+                die();
+
+
+
+
+
+function csv_to_array($filename='', $delimiter=',')
+{
+    if(!file_exists($filename) || !is_readable($filename))
+        return FALSE;
+
+    $header = NULL;
+    $data = array();
+    if (($handle = fopen($filename, 'r')) !== FALSE)
+    {
+        while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE)
+        {
+            if(!$header)
+                $header = $row;
+            else
+                $data[] = array_combine($header, $row);
+        }
+        fclose($handle);
+    }
+    return $data;
+}
+
+function csv_to_array2($filename='', $delimiter=',')
+{
+    if(!file_exists($filename) || !is_readable($filename))
+        return FALSE;
+
+    $header = NULL;
+    $data = array();
+    if (($handle = fopen($filename, 'r')) !== FALSE)
+    {
+        while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE)
+        {
+            if(!$header)
+                $header = array(0,1,2,3,4,5,6,7,8,9,10);
+            else
+                $data[] = $row;
+        }
+        fclose($handle);
+    }
+    return $data;
+}
+
+function sortMultiDimArray($a, $b){
+    return ($a[6] <= $b[6]) ? -1 : 1;
+}
+
+function imageFindByRef($needle, $aImagesFiles, $prefix = ''){
+    $result = [];
+    foreach ($aImagesFiles as $file){
+        if (strpos($file, $needle) === 0){
+            $result [] = $prefix.$file;
+        }
+    }
+    return $result;
+}
+
+function progress(){
+    global $iloop;
+    $progressMessage = "Conversion en cours patientez...\r";
+    if (strlen($progressMessage) === $iloop+1){
+        $iloop = "0";
+    }
+    $progressMessage = str_split($progressMessage);
+    $iloop++;
+    $progressMessage[$iloop] = "\033[35;2m\e[0m".strtoupper($progressMessage[$iloop]);
+    echo " \033[7m".implode($progressMessage);
+    usleep(90000);
+}
+
+
+

@@ -1,0 +1,111 @@
+<?php
+
+$dirpath = '/home/ubuntu_user/geant.local/ECHANGES/STOCK';
+$originPath = '/home/drive/ftp';
+$backupStockPath = '/home/drive/ftp/backup/stock/';
+$srcStockPath = '/home/drive/ftp/src/stock/';
+$backupRefPath = '/home/drive/ftp/backup/ref/';
+$srcRefPath = '/home/drive/ftp/src/ref/';
+$backupPricePath = '/home/drive/ftp/backup/price/';
+$srcPricePath = '/home/drive/ftp/src/price/';
+$dirPathSrcProduct = '/home/drive/ftp/src/product';
+if(!is_dir($dirPathSrcProduct)){
+    mkdir($dirPathSrcProduct, 0755, true);
+}
+
+if($dossier = opendir($originPath))
+{
+    while(false !== ($fichier = readdir($dossier)))
+    {
+        $fileExploade = explode(".", $fichier);
+        $prefix = explode("_", $fileExploade[0]);
+
+        if ($fileExploade[1] && $prefix[0] && $prefix[0] == 'Stock'){
+            echo "Fichier stock : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupStockPath.$fichier);
+            copy($originPath.'/'.$fichier,$srcStockPath.'source_stock.csv');
+            unlink($originPath.'/'.$fichier);
+            echo "Copy Ok\n";
+        }else {
+            echo "Pas de fichiers stock\n";
+        }
+
+        if ($fileExploade[1] && $prefix[0] && $prefix[0] == 'Ref'){
+            echo "Fichier ref : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupRefPath.$fichier);
+            copy($originPath.'/'.$fichier,$srcRefPath.'source_ref.csv');
+            unlink($originPath.'/'.$fichier);
+            echo "Copy Ok\n";
+        }
+
+        if ($fileExploade[1] && $prefix[0] && $prefix[0] == 'price'){
+            echo "Fichier price : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupPricePath.$fichier);
+            copy($originPath.'/'.$fichier,$srcPricePath.'source_price.csv');
+            unlink($originPath.'/'.$fichier);
+            echo "Copy Ok\n";
+        }
+
+        /*if($fileExploade[1] == 'csv'){
+            //Read data csv:
+            if (($handle = fopen($dirpath.'/'.$fichier, "r")) !== FALSE) {
+
+                for ($current_line = 0; $line = fgetcsv($handle, 0, ";"); $current_line++) {
+
+                    $product_reference = trim($line[0]);
+                    //$magasin_note = (int)trim($line[1]);
+                    $qty = trim($line[7]);
+                    //get id store
+                    //$_sqlGetStoreId = 'SELECT id_store FROM '._DB_PREFIX_.'store WHERE note = '.$magasin_note;
+                    //$_getStoreId = Db::getInstance()->executeS($_sqlGetStoreId);
+                    //$id_magasin = $_getStoreId[0]["id_store"];
+
+                    //Get Id Shop
+                    //$_sqlGetShopId = 'SELECT id_shop FROM '._DB_PREFIX_.'store_shop WHERE id_store = '.$id_magasin;
+                    //$_shopId = Db::getInstance()->executeS($_sqlGetShopId);
+                    //$idShop = $_shopId[0]["id_shop"];
+                    $idShop = 1;
+                    if(!empty($idShop)){
+                        //Get Id Product
+                        $_sqlGetProductId = 'SELECT id_product FROM '._DB_PREFIX_.'product WHERE reference = "'.$product_reference.'"';
+                        $_getProductId = Db::getInstance()->executeS($_sqlGetProductId);
+                        if(!empty($_getProductId)){
+                            $idProduct = (int)$_getProductId[0]["id_product"];
+                            //var_dump($idProduct);
+                            //Update Quantity
+                            $_sqlUpdateProductQuantity = 'UPDATE '._DB_PREFIX_.'stock_available SET quantity = "'.$qty.'" WHERE id_product= "'.$idProduct.'" AND id_shop="'.$idShop.'"';
+                            Db::getInstance()->execute($_sqlUpdateProductQuantity);
+                        }else{
+                            //check if product Attribute reference
+                            $_sqlGetProductAttributeId = 'SELECT id_product_attribute,id_product FROM '._DB_PREFIX_.'product_attribute WHERE reference = "'.$product_reference.'"';
+                            $_getProductAttributeId = Db::getInstance()->executeS($_sqlGetProductAttributeId);
+
+                            if(!empty($_getProductAttributeId)){
+                                $id_product_attribute = (int)$_getProductAttributeId[0]["id_product_attribute"];
+                                $idProduct = (int)$_getProductAttributeId[0]["id_product"];
+                                //Update Quantity
+                                $_sqlUpdateProductQuantity = 'UPDATE '._DB_PREFIX_.'stock_available SET quantity = "'.$qty.'" WHERE id_product_attribute= "'.$id_product_attribute.'" AND id_shop="'.$idShop.'"';
+                                Db::getInstance()->execute($_sqlUpdateProductQuantity);
+                                $sumQuantity = Db::getInstance()->executeS('SELECT SUM(`quantity`)
+                                            FROM `'._DB_PREFIX_.'stock_available`
+                                            WHERE `id_product` = '.$idProduct.' AND id_shop='.$idShop.' AND id_product_attribute != 0');
+
+                                Db::getInstance()->execute('
+                                    UPDATE `'._DB_PREFIX_.'stock_available`
+                                    SET `quantity` = '.$sumQuantity[0]["SUM(`quantity`)"].'
+                                    WHERE `id_product` = '.$idProduct.' AND id_product_attribute = 0 ');
+                            }
+                        }
+                    }
+                }
+                //archive File
+                if(copy($dirpath.'/'.$fichier, $dirPathBackup.'/'.$fileExploade[0].'_'.date("Y").'_'.date("m").'_'.date("d").'_'.date('H').'_'.date('i').'_'.date('s').'.csv'))
+                    unlink($dirpath.'/'.$fichier);
+            }
+        }*/
+    }
+}
+
+?>
+
+

@@ -1,0 +1,72 @@
+<?php
+
+$dirpath = '/home/ubuntu_user/geant.local/ECHANGES/STOCK';
+$originPath = '/home/drive/ftp';
+$backupStockPath = '/home/drive/ftp/backup/stock/';
+$srcStockPath = '/home/drive/ftp/src/stock/';
+$backupRefPath = '/home/drive/ftp/backup/ref/';
+$srcRefPath = '/home/drive/ftp/src/ref/';
+$backupPricePath = '/home/drive/ftp/backup/price/';
+$srcPricePath = '/home/drive/ftp/src/price/';
+$dirPathSrcProduct = '/home/drive/ftp/src/product';
+if(!is_dir($dirPathSrcProduct)){
+    mkdir($dirPathSrcProduct, 0755, true);
+}
+
+if($dossier = opendir($originPath))
+{
+    $nbStock = 0;
+    $nbRef = 0;
+    $nbPrice = 0;
+    $bCopy = false;
+
+    while(false !== ($fichier = readdir($dossier)))
+    {
+        $fileExploade = explode(".", $fichier);
+        $prefix = explode("_", $fileExploade[0]);
+
+        if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'Stock'){
+            //echo "Fichier stock : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupStockPath.$fichier);
+            copy($originPath.'/'.$fichier,$srcStockPath.'source_stock.csv');
+            unlink($originPath.'/'.$fichier);
+            $nbStock++;
+            $bCopy = true;
+            //echo "Copy Ok\n";
+        }else {
+            //echo "Pas de fichiers stock\n";
+        }
+
+        if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'Ref'){
+            //echo "Fichier ref : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupRefPath.$fichier);
+            copy($originPath.'/'.$fichier,$srcRefPath.'source_ref.csv');
+            unlink($originPath.'/'.$fichier);
+            $nbRef++;
+            $bCopy = true;
+            //echo "Copy Ok\n";
+        }
+
+        if (isset($fileExploade[1]) && $fileExploade[1] && $prefix[0] && $prefix[0] == 'price'){
+            //echo "Fichier price : ".$fichier."\n";
+            copy($originPath.'/'.$fichier,$backupPricePath.$fichier);
+            copy($originPath.'/'.$fichier,$srcPricePath.'source_price.csv');
+            unlink($originPath.'/'.$fichier);
+            $nbPrice++;
+            $bCopy = true;
+            //echo "Copy Ok\n";
+        }
+    }
+    
+    if ($bCopy){
+        echo "Copie terminée : \n";
+        echo "Stock => ".$nbStock."\n";
+        echo "Ref => ".$nbRef."\n";
+        echo "Price => ".$nbPrice."\n"; 
+    }else{
+        echo "Aucun nouveau fichier.\n";
+    }
+    
+}
+
+?>
