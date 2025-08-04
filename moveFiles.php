@@ -110,10 +110,7 @@ try {
                     $command = "python3 " . escapeshellarg($pythonScript) . " " .
                         escapeshellarg($srcDest) . " " . // Ancien fichier
                         escapeshellarg($filePath) . " " . // Nouveau fichier
-                        "--output-data " . escapeshellarg($diffOutput) . " " .
-                        "--output-log " . escapeshellarg($diffLog) . " " .
-                        "--deleted-file " . escapeshellarg($deletedFile) . " " .
-                        "--id-column EAN --delimiter ;";
+                        "--output-data " . escapeshellarg($diffOutput);
 
                     // Exécuter le script Python
                     $output = [];
