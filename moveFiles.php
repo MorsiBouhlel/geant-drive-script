@@ -94,7 +94,59 @@ try {
             case 'ref':
                 $srcDest = "{$paths['src']['ref']}{$folder}source_ref.csv";
                 $lastVersionDest = "{$paths['last_version']['ref']}source_ref_{$subPrefix}.csv";
-                handleFileCopy($filePath, $paths['backup']['stock'], $file, $srcDest, $lastVersionDest);
+                $diffOutput = "{$paths['src']['ref']}{$folder}updated.csv"; // Fichier de sortie du script Python
+                $diffLog = "{$paths['src']['ref']}{$folder}diff_log.csv";  // Log des différences
+                $deletedFile = "{$paths['src']['ref']}{$folder}deleted_rows.csv"; // Fichier des suppressions
+
+                // Sauvegarde du fichier original dans le dossier backup
+                if (!copy($filePath, "{$paths['backup']['ref']}{$file}")) {
+                    throw new Exception("Échec de la copie vers {$paths['backup']['ref']}{$file}");
+                }
+
+                // Si un fichier source_ref.csv existe déjà, exécuter le script Python pour calculer la différence
+                if (file_exists($srcDest)) {
+                    // Commande pour exécuter le script Python
+                    $pythonScript = './ref_diff.py'; // Remplacez par le chemin réel de votre script Python
+                    $command = "python3 " . escapeshellarg($pythonScript) . " " .
+                        escapeshellarg($srcDest) . " " . // Ancien fichier
+                        escapeshellarg($filePath) . " " . // Nouveau fichier
+                        "--output-data " . escapeshellarg($diffOutput) . " " .
+                        "--output-log " . escapeshellarg($diffLog) . " " .
+                        "--deleted-file " . escapeshellarg($deletedFile) . " " .
+                        "--id-column EAN --delimiter ;";
+
+                    // Exécuter le script Python
+                    $output = [];
+                    $returnVar = 0;
+                    exec($command, $output, $returnVar);
+
+                    if ($returnVar !== 0) {
+                        throw new Exception("Échec de l'exécution du script Python pour $filePath");
+                    }
+
+                    // Sauvegarde de la version précédente si elle existe
+                    if (file_exists($srcDest)) {
+                        if (!copy($srcDest, $lastVersionDest)) {
+                            throw new Exception("Échec de la sauvegarde de la dernière version vers $lastVersionDest");
+                        }
+                    }
+
+                    // Remplacer srcDest par le fichier de différences (updated.csv)
+                    if (!copy($diffOutput, $srcDest)) {
+                        throw new Exception("Échec de la copie de $diffOutput vers $srcDest");
+                    }
+                } else {
+                    // Si aucun fichier source_ref.csv n'existe, copier directement le fichier original
+                    if (!copy($filePath, $srcDest)) {
+                        throw new Exception("Échec de la copie vers $srcDest");
+                    }
+                }
+
+                // Suppression du fichier original
+                if (!unlink($filePath)) {
+                    throw new Exception("Échec de la suppression du fichier $filePath");
+                }
+
                 $counts['ref']++;
                 $hasCopied = true;
                 break;
