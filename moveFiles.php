@@ -106,7 +106,7 @@ try {
                 // Si un fichier source_ref.csv existe déjà, exécuter le script Python pour calculer la différence
                 if (file_exists($srcDest)) {
                     // Commande pour exécuter le script Python
-                    $pythonScript = './ref_diff.py'; // Remplacez par le chemin réel de votre script Python
+                    $pythonScript = '/home/drive/ftp/geant-drive-script/ref_diff.py'; // Remplacez par le chemin réel de votre script Python
                     $command = "python3 " . escapeshellarg($pythonScript) . " " .
                         escapeshellarg($srcDest) . " " . // Ancien fichier
                         escapeshellarg($filePath) . " " . // Nouveau fichier
