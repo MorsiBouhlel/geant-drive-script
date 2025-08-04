@@ -9,6 +9,7 @@ def load_file(filepath, id_column='EAN', delimiter=';'):
     with open(filepath, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=delimiter)
         for row in reader:
+            row = {key: str(value).strip() for key, value in row.items()}
             key = row.get(id_column, '').strip()
             if not key:
                 continue
