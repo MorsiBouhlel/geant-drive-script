@@ -1,24 +1,18 @@
 import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import argparse
 
-IGNORED_COLUMNS = {' PV', 'PVPERM ', ' FRN'}
+IGNORED_COLUMNS = {' PV', 'PVPERM ',' FRN'}
 
 def load_file(filepath, id_column='EAN', delimiter=';'):
     data = {}
     with open(filepath, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=delimiter)
-        fieldnames = reader.fieldnames
-        print(f"CSV Fieldnames: {fieldnames}")  # Debug: Print column names
         for row in reader:
-            print(f"Sample Row: {row}")  # Debug: Print first row
-            row = {key: str(value).strip() for key, value in row.items()}
             key = row.get(id_column, '').strip()
             if not key:
                 continue
             data[key] = row
-            break  # Stop after first row for debugging
-    return data, fieldnames
+    return data, reader.fieldnames
 
 def compare_rows(ean, old_row, new_row):
     changes = []
@@ -121,7 +115,7 @@ def main():
     parser.add_argument('--output-data', type=str, default='updated.csv', help="Chemin vers le fichier de sortie pour les données mises à jour")
     parser.add_argument('--output-log', type=str, default='diff_log.csv', help="Chemin vers le fichier de log des différences")
     parser.add_argument('--deleted-file', type=str, default='deleted_rows.csv', help="Chemin vers le fichier des lignes supprimées")
-    parser.add_argument('--id-column', type=str, default='EAN', help="Nom de la colonne ID (par défaut: EAN)")
+    parser.add_argument('--id-column', type=str, default=' EAN', help="Nom de la colonne ID (par défaut: EAN)")
     parser.add_argument('--delimiter', type=str, default=';', help="Délimiteur CSV (par défaut: ;)")
     parser.add_argument('--max-workers', type=int, default=8, help="Nombre maximum de workers pour le multithreading (par défaut: 8)")
 
