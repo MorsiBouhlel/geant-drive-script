@@ -8,13 +8,17 @@ def load_file(filepath, id_column='EAN', delimiter=';'):
     data = {}
     with open(filepath, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=delimiter)
+        fieldnames = reader.fieldnames
+        print(f"CSV Fieldnames: {fieldnames}")  # Debug: Print column names
         for row in reader:
+            print(f"Sample Row: {row}")  # Debug: Print first row
             row = {key: str(value).strip() for key, value in row.items()}
             key = row.get(id_column, '').strip()
             if not key:
                 continue
             data[key] = row
-    return data, reader.fieldnames
+            break  # Stop after first row for debugging
+    return data, fieldnames
 
 def compare_rows(ean, old_row, new_row):
     changes = []
