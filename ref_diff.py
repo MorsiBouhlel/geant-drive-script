@@ -2,7 +2,7 @@ import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
 
-IGNORED_COLUMNS = {' PV', 'PVPERM ',' FRN'}
+IGNORED_COLUMNS = {}
 
 def load_file(filepath, id_column='EAN', delimiter=';'):
     data = {}
