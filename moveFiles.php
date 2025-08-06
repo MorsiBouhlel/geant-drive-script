@@ -74,7 +74,7 @@ try {
 
         $prefix = $prefixParts[0];
         $subPrefix = substr($prefixParts[1], 0, 4);
-        $folder = $prefixMap[$subPrefix] ?? null;
+            $folder = $prefixMap[$subPrefix] ?? null;
 
         if (!$folder) {
             continue;
@@ -104,7 +104,7 @@ try {
                 }
 
                 // Si un fichier source_ref.csv existe déjà, exécuter le script Python pour calculer la différence
-                if (file_exists($srcDest)) {
+                if (file_exists($lastVersionDest)) {
                     // Commande pour exécuter le script Python
                     $pythonScript = '/home/drive/ftp/geant-drive-script/ref_diff.py'; // Remplacez par le chemin réel de votre script Python
                     $command = "python3 " . escapeshellarg($pythonScript) . " " .
@@ -122,8 +122,8 @@ try {
                     }
 
                     // Sauvegarde de la version précédente si elle existe
-                    if (file_exists($srcDest)) {
-                        if (!copy($srcDest, $lastVersionDest)) {
+                    if (file_exists($filePath)) {
+                        if (!copy($filePath, $lastVersionDest)) {
                             throw new Exception("Échec de la sauvegarde de la dernière version vers $lastVersionDest");
                         }
                     }
@@ -134,9 +134,9 @@ try {
                     }
                 } else {
                     // Si aucun fichier source_ref.csv n'existe, copier directement le fichier original
-                    if (!copy($filePath, $srcDest)) {
-                        throw new Exception("Échec de la copie vers $srcDest");
-                    }
+                    //if (!copy($filePath, $srcDest)) {
+                    //    throw new Exception("Échec de la copie vers $srcDest");
+                    //}
                 }
 
                 // Suppression du fichier original
