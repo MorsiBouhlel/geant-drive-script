@@ -2,6 +2,8 @@
 
 // Configuration
 const SOURCE_FOLDER = "/home/drive/ftp/src/ref";
+
+const NEW_PRODUCTS_SOURCE_FOLDER = "/home/drive/ftp/last_version/ref/";
 const DEST_FOLDER = "/home/drive/ftp/dest/product";
 const IMAGES_UPDATE_FOLDER = "/home/drive/ftp/IMGS-Picking";
 const IMAGES_FOLDER = "/home/drive/ftp/IMGS";
@@ -94,6 +96,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
     $destFileName = DEST_FOLDER . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . "{$shop}{$timestamp}_newProducts.csv";
     $destFileNameUpdate = DEST_FOLDER . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . "{$shop}{$timestamp}_updateProducts.csv";
     $sourceFile = SOURCE_FOLDER . DIRECTORY_SEPARATOR . "{$shop}source_ref.csv";
+    $newProductsSourceFile = NEW_PRODUCTS_SOURCE_FOLDER . DIRECTORY_SEPARATOR . "{$shop}source_ref.csv";
 
     // Ensure directories exist
     $backupDir = dirname($destFileName);
@@ -120,8 +123,11 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
     // Read source data
     try {
         $sourceContent = csvToArray($sourceFile);
+        $newProductsSourceContent = csvToArray($newProductsSourceFile);
         echo "Source file: $sourceFile\n";
         echo "Number of references: " . count($sourceContent) . "\n";
+        echo "New Products source file = $newProductsSourceFile\n";
+        echo "Number of references: " . count($newProductsSourceContent) . "\n";
     } catch (RuntimeException $e) {
         echo "Error: {$e->getMessage()}\n";
         fclose($fImagesCSV);
@@ -130,8 +136,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
         return;
     }
 
-    // Process products
-    foreach ($sourceContent as $line) {
+    foreach ($newProductsSourceContent as $line) {
         // New products
         $images = imageFindByRef($line[3], $imageFiles, IMAGE_URL_PREFIX);
         if ($images) {
@@ -156,6 +161,10 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
                 $line[11] ?? ''
             ], ';');
         }
+    }
+
+    // Process products
+    foreach ($sourceContent as $line) {
 
         // Updated products
         $imagesUpdate = imageFindByRef($line[3], $imageFilesUpdate, IMAGE_URL_PREFIX);
