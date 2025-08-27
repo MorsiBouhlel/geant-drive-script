@@ -112,6 +112,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
     fputcsv($fImagesCSV, ['ref', 'categories'], ';');
 
     $fp = fopen($destFileName, 'w');
+    $fpSourceFile = fopen($sourceFile, 'a+');
     $fpUpdate = fopen($destFileNameUpdate, 'w');
     if (!$fp || !$fpUpdate) {
         throw new RuntimeException("Cannot open output files");
@@ -160,6 +161,8 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
                 SHOPS[$shopId],
                 $line[11] ?? ''
             ], ';');
+
+            fputcsv($fpSourceFile, $line);
         }
     }
 
@@ -198,6 +201,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
     // Close files
     fclose($fImagesCSV);
     fclose($fp);
+    fclose($fpSourceFile);
     fclose($fpUpdate);
 
     // Copy files to final destination
