@@ -162,7 +162,7 @@ function processShop(string $shop, array $imageFiles, array $imageFilesUpdate): 
                 $line[11] ?? ''
             ], ';');
 
-            fputcsv($fpSourceFile, $line);
+            fputcsv($fpSourceFile, $line, ';');
         }
     }
 
